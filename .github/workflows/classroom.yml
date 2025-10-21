@@ -1,0 +1,79 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: A4 · generate_sine_data · test structure
+      id: a4-generate_sine_data-test-structure
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: A4 · generate_sine_data · test structure
+        setup-command: pip install -r requirements.txt
+        command: 'pytest -q test_a4-overfitting.py::test_structure_and_exact_x(ns):'
+        timeout: 10
+        max-score: 10
+    - name: A4 · generate_sine_data · No-Noise
+      id: a4-generate_sine_data-no-noise
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: A4 · generate_sine_data · No-Noise
+        setup-command: pip install -r requirements.txt
+        command: pytest -q test_a4-overfitting.py::test_no_noise
+        timeout: 10
+        max-score: 10
+    - name: A4 · PolynomialGD · predict() forward pass
+      id: a4-polynomialgd-predict-forward-pass
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: A4 · PolynomialGD · predict() forward pass
+        setup-command: pip install -r requirements.txt
+        command: pytest -q test_a4-overfitting.py::test_poly_predict_forward_pass
+        timeout: 10
+        max-score: 10
+    - name: A4 · PolynomialGD · Gradient korrekt (numerischer Check)
+      id: a4-polynomialgd-gradient-korrekt-numerischer-check
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: A4 · PolynomialGD · Gradient korrekt (numerischer Check)
+        setup-command: pip install -r requirements.txt
+        command: pytest -q test_a4-overfitting.py::test_poly_compute_gradient_matches_numeric
+        timeout: 10
+        max-score: 20
+    - name: A4 · PolynomialGD · Lernt & MSE sinkt
+      id: a4-polynomialgd-lernt-mse-sinkt
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: A4 · PolynomialGD · Lernt & MSE sinkt
+        setup-command: pip install -r requirements.txt
+        command: pytest -q test_a4-overfitting.py::test_poly_fit_learns_and_mse_drops
+        timeout: 10
+        max-score: 25
+    - name: A4 - generate_sine_data - reproducibility
+      id: a4-generate_sine_data-reproducibility
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: A4 - generate_sine_data - reproducibility
+        setup-command: pip install -r requirements.txt
+        command: pytest -q test_a4-overfitting.py::test_reproducibility_with_seed
+        timeout: 10
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        A4-GENERATE_SINE_DATA-TEST-STRUCTURE_RESULTS: "${{steps.a4-generate_sine_data-test-structure.outputs.result}}"
+        A4-GENERATE_SINE_DATA-NO-NOISE_RESULTS: "${{steps.a4-generate_sine_data-no-noise.outputs.result}}"
+        A4-POLYNOMIALGD-PREDICT-FORWARD-PASS_RESULTS: "${{steps.a4-polynomialgd-predict-forward-pass.outputs.result}}"
+        A4-POLYNOMIALGD-GRADIENT-KORREKT-NUMERISCHER-CHECK_RESULTS: "${{steps.a4-polynomialgd-gradient-korrekt-numerischer-check.outputs.result}}"
+        A4-POLYNOMIALGD-LERNT-MSE-SINKT_RESULTS: "${{steps.a4-polynomialgd-lernt-mse-sinkt.outputs.result}}"
+        A4-GENERATE_SINE_DATA-REPRODUCIBILITY_RESULTS: "${{steps.a4-generate_sine_data-reproducibility.outputs.result}}"
+      with:
+        runners: a4-generate_sine_data-test-structure,a4-generate_sine_data-no-noise,a4-polynomialgd-predict-forward-pass,a4-polynomialgd-gradient-korrekt-numerischer-check,a4-polynomialgd-lernt-mse-sinkt,a4-generate_sine_data-reproducibility
